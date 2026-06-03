@@ -87,16 +87,16 @@ fig.show()
 
 *New in 6.8*
 
-In `'x unified'` and `'y unified'` hover modes, items in the hover label appear in the order their traces were added to the figure. Set `layout.hoversort` to `"descending"` or `"ascending"` to instead sort the items by the value being shown, which makes it easier to compare traces at a glance.
+In `'x unified'` and `'y unified'` hover modes, items in the hover label appear in the order their traces were added to the figure (the default, `hoversort="trace"`). Set `layout.hoversort` to `"value descending"` or `"value ascending"` to instead sort the items by the value being shown, which makes it easier to compare traces at a glance.
 
 ```python
 import plotly.express as px
 
 df = px.data.stocks()
 
-fig = px.line(df, x="date", y=df.columns[1:], title="layout.hoversort='descending'")
+fig = px.line(df, x="date", y=df.columns[1:], title="layout.hoversort='value descending'")
 fig.update_traces(hovertemplate=None)
-fig.update_layout(hovermode="x unified", hoversort="descending")
+fig.update_layout(hovermode="x unified", hoversort="value descending")
 
 fig.show()
 ```
