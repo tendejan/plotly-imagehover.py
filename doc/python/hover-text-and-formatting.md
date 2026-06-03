@@ -243,19 +243,9 @@ fig.show()
 
 *New in 6.7*
 
-By default, hover and click events are only emitted when the cursor is over a trace. Set `layout.hoveranywhere=True` or `layout.clickanywhere=True` to emit these events anywhere inside the plot area, including over empty space. The events carry the cursor's data coordinates, which is useful when building interactive callbacks (for example, in [Dash](https://dash.plotly.com/)) that need to respond to clicks on locations that don't correspond to a specific data point.
+By default, hover and click events are only emitted when the cursor is over a trace. Set `hoveranywhere` or `clickanywhere` to `True` to emit these events anywhere inside the plot area, including over empty space: `fig.update_layout(hoveranywhere=True, clickanywhere=True)`. The events carry the cursor's data coordinates, which is useful when building interactive callbacks (for example, in [Dash](https://dash.plotly.com/)) that need to respond to clicks on locations that don't correspond to a specific data point.
 
-```python
-import plotly.express as px
-
-df = px.data.iris()
-fig = px.scatter(df, x="sepal_width", y="sepal_length", color="species")
-fig.update_layout(hoveranywhere=True, clickanywhere=True)
-
-fig.show()
-```
-
-### Customizing Hover text with Plotly Express
+### Customizing Hover Text with Plotly Express
 
 Plotly Express functions automatically add all the data being plotted (x, y, color etc) to the hover label. Many Plotly Express functions also support configurable hover text. The `hover_data` argument accepts a list of column names to be added to the hover tooltip, or a dictionary for advanced formatting (see the next section). The `hover_name` property controls which column is displayed in bold as the tooltip title.
 
