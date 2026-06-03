@@ -83,6 +83,24 @@ fig.update_layout(hovermode="x unified")
 fig.show()
 ```
 
+#### Sorting Unified Hover Labels by Value
+
+*New in 6.8*
+
+In `'x unified'` and `'y unified'` hover modes, items in the hover label appear in the order their traces were added to the figure. Set `layout.hoversort` to `"descending"` or `"ascending"` to instead sort the items by the value being shown, which makes it easier to compare traces at a glance.
+
+```python
+import plotly.express as px
+
+df = px.data.stocks()
+
+fig = px.line(df, x="date", y=df.columns[1:], title="layout.hoversort='descending'")
+fig.update_traces(hovertemplate=None)
+fig.update_layout(hovermode="x unified", hoversort="descending")
+
+fig.show()
+```
+
 #### Customize Title in Unified Hover Mode
 
 *New in 6.3*
@@ -217,6 +235,22 @@ fig.update_layout(
         font_family="Rockwell"
     )
 )
+
+fig.show()
+```
+
+### Emitting Hover and Click Events Anywhere in the Plot Area
+
+*New in 6.7*
+
+By default, hover and click events are only emitted when the cursor is over a trace. Set `layout.hoveranywhere=True` or `layout.clickanywhere=True` to emit these events anywhere inside the plot area, including over empty space. The events carry the cursor's data coordinates, which is useful when building interactive callbacks (for example, in [Dash](https://dash.plotly.com/)) that need to respond to clicks on locations that don't correspond to a specific data point.
+
+```python
+import plotly.express as px
+
+df = px.data.iris()
+fig = px.scatter(df, x="sepal_width", y="sepal_length", color="species")
+fig.update_layout(hoveranywhere=True, clickanywhere=True)
 
 fig.show()
 ```
