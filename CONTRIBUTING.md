@@ -277,10 +277,16 @@ and places them in `codegen/resources/` and `plotly/package_data/`, respectively
 
 It then does the following:
  - Regenerates all of the `graph_objs` classes based on the new schema
- - Runs `npm install` in `js/`to refresh `js/package-lock.json` against the new `plotly.js`
+ - Runs `npm install` in `js/` to refresh `js/package-lock.json` against the new `plotly.js`
  - Runs `npm run build` to rebuild the JupyterLab extension and FigureWidget bundles in `plotly/labextension` and `plotly/package_data/widgetbundle.js`.
 
-Commit the updated files under `js/`, `plotly/graph_objs/`, `plotly/offline/` `codegen/resources/`, and `plotly/package_data/`.
+Commit the updated files under:
+ - `codegen/resources/`
+ - `js/`
+ - `plotly/graph_objs/`
+ - `plotly/labextension/`
+ - `plotly/offline/`
+ - `plotly/package_data/`
 
 If you need to skip the `npm` steps entirely (e.g. `npm` isn't available),
 set the `SKIP_NPM=1` environment variable:

@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Updated
 - Update plotly.js from version 3.6.0 to version 3.7.0. See the plotly.js [release notes](https://github.com/plotly/plotly.js/releases/tag/v3.7.0) for more information [[#5639](https://github.com/plotly/plotly.py/pull/5639)]. Notable changes include:
-  - Update `sendDataToCloud` modebar button to upload chart to Plotly Cloud [[#7802](https://github.com/plotly/plotly.js/pull/7802), [#7852](https://github.com/plotly/plotly.js/pull/7852), [#7854](https://github.com/plotly/plotly.js/pull/7854)]. NOTE: The Plotly Cloud endpoint for receiving charts is not yet functional, so this button won't complete the upload.
+  - Rename `sendDataToCloud` modebar button to `sendChartToCloud`, and update to upload chart to Plotly Cloud [[#7802](https://github.com/plotly/plotly.js/pull/7802), [#7852](https://github.com/plotly/plotly.js/pull/7852), [#7854](https://github.com/plotly/plotly.js/pull/7854)]. NOTE: The Plotly Cloud endpoint for receiving charts is not yet functional, so this button won't complete the upload.
   - Fix stale `scattergl` error bars after toggling traces with mixed error bar visibility [[#7773](https://github.com/plotly/plotly.js/issues/7773)], with thanks to @JulienIcon for the contribution!
   - Fix geo `fitbounds` to choose a compact longitude range when point data straddles the antimeridian [[#7837](https://github.com/plotly/plotly.js/pull/7837)], with thanks to @SharadhNaidu for the contribution!
 
