@@ -1,5 +1,8 @@
 from io import BytesIO
 import base64
+import mimetypes
+from pathlib import Path
+from urllib.parse import urlparse
 from .png import Writer, from_array
 
 try:
@@ -73,3 +76,61 @@ def image_array_to_data_uri(img, backend="pil", compression=4, ext="png"):
             pil_img.save(stream, format=ext, compress_level=compression)
             base64_string = prefix + base64.b64encode(stream.getvalue()).decode("utf-8")
     return base64_string
+
+
+def image_source_to_data_uri(source):
+    """Normalize a single image source into a string usable directly as an
+    <img src="..."> value, with no dependency on an external file server.
+
+    Parameters
+    ----------
+    source: str or PIL.Image.Image
+        - A string already starting with "data:" is returned unchanged.
+        - A string that looks like an http(s) URL is returned unchanged.
+        - Any other string is treated as a local filesystem path: its bytes
+          are read and base64-encoded into a data URI, with the MIME type
+          guessed from the file extension.
+        - A PIL.Image.Image is encoded as a PNG data URI.
+
+    Returns
+    -------
+    str
+
+    Raises
+    ------
+    TypeError
+        If `source` is neither a string nor a PIL.Image.Image.
+    FileNotFoundError
+        If `source` is a string that is not a data URI or an http(s) URL,
+        and no file exists at that path.
+    """
+    if pil_imported and isinstance(source, Image.Image):
+        from _plotly_utils.basevalidators import ImageUriValidator
+
+        return ImageUriValidator.pil_image_to_uri(source)
+
+    if not isinstance(source, str):
+        raise TypeError(
+            "image source must be a string (file path, URL, or data URI) "
+            "or a PIL.Image.Image, received value of type %s" % type(source)
+        )
+
+    if source.startswith("data:"):
+        return source
+
+    if urlparse(source).scheme in ("http", "https"):
+        return source
+
+    path = Path(source)
+    if not path.is_file():
+        raise FileNotFoundError(
+            "Image source is not a data URI, an http(s) URL, or an existing "
+            "file path: %r" % source
+        )
+
+    mime_type, _ = mimetypes.guess_type(path.name)
+    if mime_type is None:
+        mime_type = "application/octet-stream"
+
+    base64_string = base64.b64encode(path.read_bytes()).decode("utf-8")
+    return "data:%s;base64,%s" % (mime_type, base64_string)

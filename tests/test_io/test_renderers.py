@@ -491,3 +491,40 @@ def test_colab_renderer_when_env_var_is_absent():
     finally:
         importlib.reload(_renderers_mod)
         pio.renderers.default = original_default
+
+
+def _hover_image_fig():
+    fig = go.Figure(go.Scatter(x=[1, 2], y=[3, 4]))
+    fig.set_hover_images(["https://a.com/1.png", "https://a.com/2.png"])
+    return fig
+
+
+def _hover_image_post_script_marker():
+    from plotly._hover_image import get_hover_image_post_script
+
+    return get_hover_image_post_script().split("{plot_id}")[0]
+
+
+def test_hover_image_injected_for_html_renderer():
+    original_default = pio.renderers.default
+    try:
+        pio.renderers.default = "notebook"
+        bundle = _hover_image_fig()._repr_mimebundle_()
+        assert _hover_image_post_script_marker() in bundle["text/html"]
+    finally:
+        pio.renderers.default = original_default
+
+
+def test_hover_image_not_injected_for_json_mimetype_renderer():
+    original_default = pio.renderers.default
+    try:
+        pio.renderers.default = "plotly_mimetype"
+        bundle = _hover_image_fig()._repr_mimebundle_()
+        # The JSON-mimetype renderer has no post_script hook; hover-image
+        # support for this render path comes from the bundled JS
+        # (js/src/mimeExtension.ts) instead, so the figure JSON itself is
+        # unaffected other than carrying the customdata/meta that JS reads.
+        assert "application/vnd.plotly.v1+json" in bundle
+        assert "text/html" not in bundle
+    finally:
+        pio.renderers.default = original_default

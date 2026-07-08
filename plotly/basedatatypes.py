@@ -827,6 +827,31 @@ class BaseFigure(object):
         else:
             return self.to_html(full_html=False, include_plotlyjs="cdn")
 
+    def _maybe_inject_hover_image_post_script(self, kwargs):
+        """
+        If this figure has any hover-image traces (see `set_hover_images`),
+        merge in the generated JS that installs the hover-image overlay,
+        composing with any `post_script` the caller already supplied.
+        Renderers with no `post_script` support (e.g. the JSON-mimetype
+        renderer used by JupyterLab/VSCode) silently ignore this, since
+        those render paths get hover-image support directly from the
+        bundled JS instead (see js/src/mimeExtension.ts).
+        """
+        from plotly._hover_image import (
+            figure_has_hover_images,
+            get_hover_image_post_script,
+            merge_post_script,
+        )
+
+        if not figure_has_hover_images(self):
+            return kwargs
+
+        kwargs = dict(kwargs)
+        kwargs["post_script"] = merge_post_script(
+            kwargs.get("post_script"), get_hover_image_post_script()
+        )
+        return kwargs
+
     def _repr_mimebundle_(self, include=None, exclude=None, validate=True, **kwargs):
         """
         Return mimebundle corresponding to default renderer.
@@ -838,6 +863,7 @@ class BaseFigure(object):
         from plotly.io._utils import validate_coerce_fig_to_dict
 
         fig_dict = validate_coerce_fig_to_dict(self, validate)
+        kwargs = self._maybe_inject_hover_image_post_script(kwargs)
         return renderers._build_mime_bundle(fig_dict, renderer_str, **kwargs)
 
     def _ipython_display_(self):
@@ -1319,6 +1345,79 @@ class BaseFigure(object):
         ):
             fn(trace)
 
+        return self
+
+    def set_hover_images(
+        self,
+        images,
+        max_width=300,
+        max_height=300,
+        selector=None,
+        row=None,
+        col=None,
+        secondary_y=None,
+    ):
+        """
+        Attach a per-point hover image to the trace(s) matched by the given
+        selector/row/col/secondary_y, so that hovering over a point shows
+        that image in a floating tooltip that follows the cursor.
+
+        This works when the figure is shown as HTML (fig.show(), write_html()),
+        as a FigureWidget, or via the default JupyterLab/VSCode notebook
+        renderer. It has no effect on static image export (e.g. via Kaleido).
+
+        Parameters
+        ----------
+        images: sequence of str or PIL.Image.Image
+            One image source per data point of the matched trace(s), in the
+            same order as that trace's data arrays (e.g. x/y). Each entry is
+            either a URL ('http://' or 'https://'), a 'data:' URI (used as
+            is), a local filesystem path (read and base64-encoded), or a
+            PIL.Image.Image (encoded as a PNG data URI).
+        max_width, max_height: int (default 300)
+            Maximum rendered size, in pixels, of the hover tooltip image.
+        selector, row, col, secondary_y:
+            Same semantics as `for_each_trace` / `select_traces`.
+
+        Returns
+        -------
+        self
+            Returns the Figure object that the method was called on
+        """
+        import numpy as np
+
+        from plotly._hover_image import build_hover_image_meta
+        from _plotly_utils.data_utils import image_source_to_data_uri
+
+        encoded = [image_source_to_data_uri(v) for v in images]
+
+        def _apply(trace):
+            existing = trace.customdata
+            if existing is None:
+                existing_arr = np.empty((len(encoded), 0), dtype=object)
+            else:
+                existing_arr = np.asarray(existing, dtype=object)
+                if existing_arr.ndim == 1:
+                    existing_arr = existing_arr.reshape(-1, 1)
+                if existing_arr.shape[0] != len(encoded):
+                    raise ValueError(
+                        "Length of `images` (%d) does not match this trace's "
+                        "existing customdata length (%d)"
+                        % (len(encoded), existing_arr.shape[0])
+                    )
+            position = existing_arr.shape[1]
+            new_arr = np.concatenate(
+                [existing_arr, np.array(encoded, dtype=object).reshape(-1, 1)],
+                axis=1,
+            )
+            trace.meta = build_hover_image_meta(
+                trace.meta, position, max_width, max_height
+            )
+            trace.customdata = new_arr
+
+        self.for_each_trace(
+            _apply, selector=selector, row=row, col=col, secondary_y=secondary_y
+        )
         return self
 
     def update_traces(
@@ -3417,6 +3516,7 @@ Invalid property path '{key_path_str}' for layout
         """
         import plotly.io as pio
 
+        kwargs = self._maybe_inject_hover_image_post_script(kwargs)
         return pio.show(self, *args, **kwargs)
 
     def to_json(self, *args, **kwargs):
@@ -3603,6 +3703,7 @@ Invalid property path '{key_path_str}' for layout
         """
         import plotly.io as pio
 
+        kwargs = self._maybe_inject_hover_image_post_script(kwargs)
         return pio.to_html(self, *args, **kwargs)
 
     def write_html(self, *args, **kwargs):
@@ -3709,6 +3810,7 @@ Invalid property path '{key_path_str}' for layout
         """
         import plotly.io as pio
 
+        kwargs = self._maybe_inject_hover_image_post_script(kwargs)
         return pio.write_html(self, *args, **kwargs)
 
     def to_image(self, *args, **kwargs):

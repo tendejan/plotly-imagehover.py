@@ -6,6 +6,7 @@ import { Widget } from '@lumino/widgets';
 import type PlotlyType from "plotly.js";
 
 import { Message } from "@lumino/messaging";
+import { installHoverImageOverlay } from "./hoverImageOverlay";
 
 /**
  * The CSS class to add to the Plotly Widget.
@@ -141,6 +142,11 @@ export class RenderedPlotly extends Widget implements IRenderMime.IRenderer {
         this.showGraph();
         this.hideImage();
         this.update();
+
+        // Install the hover-image overlay (a no-op per hover event unless
+        // the hovered trace's `meta.hover_image` is set, e.g. via
+        // fig.set_hover_images() or px's `hover_image` argument).
+        installHoverImageOverlay(this.node);
         if (frames) {
           RenderedPlotly.Plotly!.addFrames(this.node, frames);
         }

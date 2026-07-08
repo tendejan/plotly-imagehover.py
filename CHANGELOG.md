@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Added
+- Add per-point hover images: hovering over a data point can now show an image in a floating tooltip that follows the cursor. Use the new `hover_image` argument in `plotly.express.scatter` (a column of local file paths, URLs, or data URIs), or `Figure.set_hover_images()` for `graph_objects` figures. Works in HTML output (`fig.show()`, `write_html()`), `FigureWidget`, and the default JupyterLab/VSCode notebook renderer.
+
 ### Fixed
 - Raise a clear `ValueError` when an unsupported marginal plot type is passed to Plotly Express, instead of failing later with a cryptic `'NoneType' object has no attribute 'constructor'` message [[#5625](https://github.com/plotly/plotly.py/pull/5625)], with thanks to @eugen-goebel for the contribution!
 

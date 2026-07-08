@@ -21,6 +21,7 @@ def scatter(
     hover_name=None,
     hover_data=None,
     custom_data=None,
+    hover_image=None,
     text=None,
     facet_row=None,
     facet_col=None,

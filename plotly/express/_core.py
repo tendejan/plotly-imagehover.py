@@ -35,7 +35,14 @@ direct_attrables = (
     + ["ids", "error_x", "error_x_minus", "error_y", "error_y_minus", "error_z"]
     + ["error_z_minus", "lat", "lon", "locations", "animation_group"]
 )
-array_attrables = ["dimensions", "custom_data", "hover_data", "path", "wide_variable"]
+array_attrables = [
+    "dimensions",
+    "custom_data",
+    "hover_data",
+    "hover_image",
+    "path",
+    "wide_variable",
+]
 group_attrables = ["animation_frame", "facet_row", "facet_col", "line_group"]
 renameable_group_attrables = [
     "color",  # renamed to marker.color or line.color in infer_config
@@ -499,6 +506,53 @@ def make_trace_kwargs(args, trace_spec, trace_data, mapping_labels, sizeref):
                         trace_patch["customdata"] = trace_data.select(
                             *[nw.col(c) for c in dict.fromkeys(customdata_cols)]
                         )
+            elif attr_name == "hover_image":
+                if trace_spec.constructor not in [
+                    go.Histogram,
+                    go.Histogram2d,
+                    go.Histogram2dContour,
+                ]:
+                    if len(attr_value) != 1:
+                        raise ValueError(
+                            "`hover_image` accepts a single column reference, got %d"
+                            % len(attr_value)
+                        )
+                    from plotly._hover_image import build_hover_image_meta
+                    from _plotly_utils.data_utils import image_source_to_data_uri
+
+                    image_col = attr_value[0]
+                    encoded_col_name = "_plotly_hover_image_"
+                    encoded_values = [
+                        image_source_to_data_uri(v)
+                        for v in trace_data.get_column(image_col).to_list()
+                    ]
+                    trace_data = trace_data.with_columns(
+                        **{
+                            encoded_col_name: nw.new_series(
+                                name=encoded_col_name,
+                                values=encoded_values,
+                                native_namespace=nw.get_native_namespace(trace_data),
+                            )
+                        }
+                    )
+                    existing_cols = (
+                        list(trace_patch["customdata"].columns)
+                        if "customdata" in trace_patch
+                        else []
+                    )
+                    position = len(existing_cols)
+                    trace_patch["customdata"] = trace_data.select(
+                        *[
+                            nw.col(c)
+                            for c in dict.fromkeys(existing_cols + [encoded_col_name])
+                        ]
+                    )
+                    trace_patch["meta"] = build_hover_image_meta(
+                        trace_patch.get("meta"), position
+                    )
+                    # Deliberately no mapping_labels[...] entry here: the encoded
+                    # image data URI must never appear in the rendered hovertemplate
+                    # text, only in customdata + meta for the JS overlay to consume.
             elif attr_name == "color":
                 if trace_spec.constructor in [
                     go.Choropleth,
@@ -1503,7 +1557,7 @@ def build_dataframe(args, constructor):
         if field in array_attrables and args[field] is not None:
             if isinstance(args[field], dict):
                 args[field] = dict(args[field])
-            elif field in ["custom_data", "hover_data"] and isinstance(
+            elif field in ["custom_data", "hover_data", "hover_image"] and isinstance(
                 args[field], str
             ):
                 args[field] = [args[field]]

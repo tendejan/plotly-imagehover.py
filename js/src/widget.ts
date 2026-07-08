@@ -1,5 +1,6 @@
 import _ from "lodash-es";
 import Plotly from "plotly.js";
+import { installHoverImageOverlay } from "./hoverImageOverlay";
 
 // @ts-ignore
 window.PlotlyConfig = { MathJaxConfig: "local" };
@@ -910,6 +911,11 @@ export class FigureView {
         (<Plotly.PlotlyHTMLElement>that.el).on("plotly_doubleclick", function (update: any) {
           that.handle_plotly_doubleclick(update);
         });
+
+        // Install the hover-image overlay (a no-op per hover event unless
+        // the hovered trace's `meta.hover_image` is set, e.g. via
+        // fig.set_hover_images() or px's `hover_image` argument).
+        installHoverImageOverlay(that.el);
 
         // Emit event indicating that the widget has finished
         // rendering

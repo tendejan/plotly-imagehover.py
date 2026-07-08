@@ -13,7 +13,8 @@
     "build:widget": "esbuild --bundle --alias:plotly.js=plotly.js/dist/plotly --format=esm --minify --outfile=../plotly/package_data/widgetbundle.js src/widget.ts",
     "build:mimerenderer": "esbuild --bundle --alias:plotly.js=plotly.js/dist/plotly --format=esm --minify --outfile=lib/mimeExtension.js src/mimeExtension.ts",
     "build:labextension": "jupyter labextension build .",
-    "build": "npm run build:widget && npm run build:mimerenderer && npm run build:labextension",
+    "build:postscript": "esbuild --bundle --format=iife --minify --outfile=../plotly/package_data/hover_image_post_script.js src/hoverImagePostScript.ts",
+    "build": "npm run build:widget && npm run build:mimerenderer && npm run build:labextension && npm run build:postscript",
     "watch": "npm run build -- --watch --sourcemap=inline",
     "typecheck": "tsc --noEmit"
   },
@@ -33,7 +34,7 @@
     "outputDir": "../plotly/labextension",
     "webpackConfig": "./webpack.config.js",
     "_build": {
-      "load": "static/remoteEntry.2c524f5a18b54c442f5d.js",
+      "load": "static/remoteEntry.9581443435590979b441.js",
       "mimeExtension": "./mimeExtension"
     }
   }

@@ -118,3 +118,36 @@ def test_cdn_integrity_hash_matches_bundled_content(fig1):
     assert extracted_hash == expected_hash, (
         f"Hash mismatch: expected {expected_hash}, got {extracted_hash}"
     )
+
+
+def _hover_image_post_script_marker():
+    # The generated post_script has "{plot_id}" substituted with the real
+    # div id when injected into HTML output, so match on the fixed prefix
+    # before that placeholder rather than the raw script verbatim.
+    from plotly._hover_image import get_hover_image_post_script
+
+    return get_hover_image_post_script().split("{plot_id}")[0]
+
+
+def test_hover_image_post_script_not_injected_by_default(fig1):
+    html = pio.to_html(fig1)
+    assert _hover_image_post_script_marker() not in html
+
+
+def test_hover_image_post_script_injected_when_present():
+    fig = go.Figure(go.Scatter(x=[1, 2], y=[3, 4]))
+    fig.set_hover_images(["https://a.com/1.png", "https://a.com/2.png"])
+
+    html = fig.to_html()
+    assert _hover_image_post_script_marker() in html
+
+
+def test_hover_image_post_script_composes_with_user_post_script():
+    fig = go.Figure(go.Scatter(x=[1, 2], y=[3, 4]))
+    fig.set_hover_images(["https://a.com/1.png", "https://a.com/2.png"])
+
+    marker = "window.myCustomPostScript = true;"
+    html = fig.to_html(post_script=marker)
+
+    assert marker in html
+    assert _hover_image_post_script_marker() in html

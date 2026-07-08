@@ -2,7 +2,10 @@ import textwrap
 from pprint import PrettyPrinter
 
 from _plotly_utils.utils import NotEncodable, PlotlyJSONEncoder, get_module  # noqa: F401
-from _plotly_utils.data_utils import image_array_to_data_uri  # noqa: F401
+from _plotly_utils.data_utils import (  # noqa: F401
+    image_array_to_data_uri,
+    image_source_to_data_uri,
+)
 
 
 # Pretty printing

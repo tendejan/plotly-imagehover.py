@@ -215,6 +215,13 @@ docs = dict(
         "Either name or list of names of columns in `data_frame`, or pandas Series, or array_like objects",
         "Values from these columns are extra data, to be used in widgets or Dash callbacks for example. This data is not user-visible but is included in events emitted by the figure (lasso selection etc.)",
     ],
+    hover_image=[
+        colref_type,
+        colref_desc,
+        "Values from this column or array_like specify, for each data point, an image to show in a floating tooltip that follows the cursor on hover.",
+        "Local file paths are read and embedded as base64 data URIs; strings starting with 'http://', 'https://', or 'data:' are used as-is.",
+        "Only takes effect for HTML output (fig.show(), write_html()), FigureWidget, and the default JupyterLab/VSCode notebook renderer; it has no effect on static image export (e.g. via Kaleido).",
+    ],
     text=[
         colref_type,
         colref_desc,

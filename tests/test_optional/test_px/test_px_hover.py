@@ -6,6 +6,83 @@ import pytest
 from collections import OrderedDict  # an OrderedDict is needed for Python 2
 
 
+@pytest.fixture
+def hover_image_df(tmp_path):
+    img_path_1 = tmp_path / "a.png"
+    img_path_2 = tmp_path / "b.png"
+    img_path_1.write_bytes(b"fake-png-bytes-a")
+    img_path_2.write_bytes(b"fake-png-bytes-b")
+    return pd.DataFrame(
+        {
+            "x": [1, 2],
+            "y": [3, 4],
+            "label": ["p", "q"],
+            "img": [str(img_path_1), str(img_path_2)],
+        }
+    )
+
+
+def test_hover_image_scatter_local_path(hover_image_df):
+    fig = px.scatter(hover_image_df, x="x", y="y", hover_image="img")
+    trace = fig.data[0]
+    index = trace.meta["hover_image"]["customdata_index"]
+    assert trace.meta["hover_image"] == {
+        "customdata_index": index,
+        "max_width": 300,
+        "max_height": 300,
+    }
+    assert index == 0
+    for value in trace.customdata[:, index]:
+        assert value.startswith("data:image/png;base64,")
+
+
+def test_hover_image_scatter_url_passthrough(hover_image_df):
+    df = hover_image_df.assign(
+        img=["https://example.com/a.png", "https://example.com/b.png"]
+    )
+    fig = px.scatter(df, x="x", y="y", hover_image="img")
+    trace = fig.data[0]
+    index = trace.meta["hover_image"]["customdata_index"]
+    assert list(trace.customdata[:, index]) == [
+        "https://example.com/a.png",
+        "https://example.com/b.png",
+    ]
+
+
+def test_hover_image_with_custom_data_and_hover_data(hover_image_df):
+    fig = px.scatter(
+        hover_image_df,
+        x="x",
+        y="y",
+        hover_image="img",
+        custom_data=["label"],
+        hover_data=["x"],
+    )
+    trace = fig.data[0]
+    index = trace.meta["hover_image"]["customdata_index"]
+    # custom_data + hover_data ("x") occupy the earlier columns; the
+    # hover-image column is appended last and doesn't disturb them.
+    assert index == trace.customdata.shape[1] - 1
+    assert list(trace.customdata[:, 0]) == list(hover_image_df["label"])
+    for value in trace.customdata[:, index]:
+        assert value.startswith("data:image/png;base64,")
+
+
+def test_hover_image_not_in_hovertemplate(hover_image_df):
+    fig = px.scatter(hover_image_df, x="x", y="y", hover_image="img")
+    trace = fig.data[0]
+    index = trace.meta["hover_image"]["customdata_index"]
+    assert ("customdata[%d]" % index) not in trace.hovertemplate
+    for value in trace.customdata[:, index]:
+        assert value not in trace.hovertemplate
+
+
+def test_hover_image_missing_file_raises(hover_image_df):
+    df = hover_image_df.assign(img=["/nonexistent/a.png", "/nonexistent/b.png"])
+    with pytest.raises(FileNotFoundError):
+        px.scatter(df, x="x", y="y", hover_image="img")
+
+
 def test_skip_hover(backend):
     df = px.data.iris(return_type=backend)
     fig = px.scatter(
